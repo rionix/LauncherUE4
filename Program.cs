@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.IO;
 
 namespace LauncherUE4
 {
@@ -64,16 +65,32 @@ namespace LauncherUE4
     {
         static void Main(string[] args)
         {
-            if (args.Length == 0)
+            if (args.Length < 2)
+            {
+                Console.WriteLine("Arguments not found!");
+                Console.WriteLine("Usage: LauncherUE4.exe FileName StagedArguments");
                 return;
+            }
+
+            if (!File.Exists(args[0]))
+            {
+                Console.WriteLine("File not found!");
+                Console.WriteLine("Usage: LauncherUE4.exe FileName StagedArguments");
+                return;
+            }
 
             // [UE4]\Engine\Source\Programs\AutomationTool\Win\WinPlatform.Automation.cs
             // void StageBootstrapExecutable(DeploymentContext SC, string ExeName, FileReference TargetFile, StagedFileReference StagedRelativeTargetPath, string StagedArguments)
             using (ModuleResourceUpdate Update = new ModuleResourceUpdate(args[0], false))
             {
                 const int ExecArgsResourceId = 202;
-                const string StagedArguments = "MedievalTales -saveddirsuffix=Survey";
-                Update.SetData(ExecArgsResourceId, ResourceType.RawData, Encoding.Unicode.GetBytes(StagedArguments + "\0"));
+
+                string StagedArguments = "MedievalTales";
+                for (int i = 1; i < args.Length; ++i)
+                    StagedArguments += " " + args[i];
+                StagedArguments += "\0";
+
+                Update.SetData(ExecArgsResourceId, ResourceType.RawData, Encoding.Unicode.GetBytes(StagedArguments));
             }
         }
     }
