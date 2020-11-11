@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.IO;
+using IniParser;
+using IniParser.Model;
 
 namespace LauncherUE4
 {
@@ -29,7 +31,7 @@ namespace LauncherUE4
 
         const ushort DefaultLanguage = 1033; // en-us
 
-        IntPtr UpdateHandle;
+        public IntPtr UpdateHandle;
         List<IntPtr> UnmanagedPointers = new List<IntPtr>();
 
         public ModuleResourceUpdate(string OutputFile, bool bRemoveExisting)
@@ -65,32 +67,37 @@ namespace LauncherUE4
     {
         static void Main(string[] args)
         {
-            if (args.Length < 2)
+            string IniFileName;
+            
+            if (args.Length > 0 && File.Exists(args[0]))
+                IniFileName = args[0];
+            else
             {
-                Console.WriteLine("Arguments not found!");
-                Console.WriteLine("Usage: LauncherUE4.exe FileName StagedArguments");
+                Console.WriteLine("Usage: LauncherUE4 [Params.ini]");
                 return;
             }
 
-            if (!File.Exists(args[0]))
-            {
-                Console.WriteLine("File not found!");
-                Console.WriteLine("Usage: LauncherUE4.exe FileName StagedArguments");
-                return;
-            }
+            var Parser = new FileIniDataParser();
+            IniData Ini = Parser.ReadFile(IniFileName);
+
+            string OutputFile = Ini["Params"]["OutputFile"];
+            string ExecFileData = Ini["Params"]["ExecFile"];
+            string ExecArgsData = Ini["Params"]["ExecArgs"];
 
             // [UE4]\Engine\Source\Programs\AutomationTool\Win\WinPlatform.Automation.cs
             // void StageBootstrapExecutable(DeploymentContext SC, string ExeName, FileReference TargetFile, StagedFileReference StagedRelativeTargetPath, string StagedArguments)
-            using (ModuleResourceUpdate Update = new ModuleResourceUpdate(args[0], false))
+            using (ModuleResourceUpdate Update = new ModuleResourceUpdate(OutputFile, false))
             {
+                const int ExecFileResourceId = 201;
                 const int ExecArgsResourceId = 202;
 
-                string StagedArguments = "MedievalTales";
-                for (int i = 1; i < args.Length; ++i)
-                    StagedArguments += " " + args[i];
-                StagedArguments += "\0";
-
-                Update.SetData(ExecArgsResourceId, ResourceType.RawData, Encoding.Unicode.GetBytes(StagedArguments));
+                if (Update.UpdateHandle != IntPtr.Zero)
+                {
+                    Update.SetData(ExecFileResourceId, ResourceType.RawData, Encoding.Unicode.GetBytes(ExecFileData + "\0"));
+                    Update.SetData(ExecArgsResourceId, ResourceType.RawData, Encoding.Unicode.GetBytes(ExecArgsData + "\0"));
+                }
+                else
+                    Console.WriteLine("Output File not found: " + OutputFile);
             }
         }
     }

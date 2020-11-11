@@ -1,1 +1,0 @@
-@LauncherUE4.exe "%1" -novendordevice -saveddirsuffix=Survey

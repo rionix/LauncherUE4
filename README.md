@@ -1,14 +1,20 @@
 # LauncherUE4
 
-This program adds command line arguments to the game launcher from Unreal Engine 4.
+Программа модифицирует лаунчер игр, написанных на Unreal Engine 4. Заменяет путь к запускаемому файлу и его командную строку.
 
-Program usage: 
-LauncherUE4.exe FileName StagedArguments
+Пример запуска.
 
-Where:
-- LauncherUE4.exe - this program
-- FileName - launcher name include extension and path (if necessary)
-- StagedArguments - command line arguments separated by a space and beginning with a dash
+```
+LauncherUE4 Params.ini
+```
 
-Example:
-LauncherUE4.exe LauncherName.exe -novendordevice
+Формат INI файла.
+
+```
+[Params]
+OutputFile=Путь к лаунчеру который будем изменять
+ExecFile=Относительный путь к запускаемому файлу
+ExecArgs=Аргументы командной строки
+```
+
+Пример такого файла смотри в `ParamsForBFG.ini`.
